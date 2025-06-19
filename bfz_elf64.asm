@@ -4,7 +4,8 @@ BITS 64
 
 ; ================ CONSTANTS ================
 
-TAPE_SIZE equ 30000 
+TAPE_SIZE equ 30000
+STAT_SIZE equ 144
 
 ; ================ ELF HEADER ================
 
@@ -43,11 +44,23 @@ phdr:
 
 phdrsize equ $ - phdr
 
+
+
 ; ================ EXECUTABLE CODE ================
 
 
 
 _start:
+
+	; open the file
+	mov rax, 2
+	lea rdi, [filename]
+	xor rsi, rsi 	; O_RDONLY
+	xor rdx, rdx
+	syscall
+
+	; save the file descriptor
+	push rax
 
 	; get the end of the data segment...
 	mov rax, 12
@@ -62,11 +75,48 @@ _start:
 	mov rax, 12
 	syscall
 
+	push rax
+
+	; allocate memory for fstat
+	lea rdi, [rax+STAT_SIZE]
+	mov rax, 12
+	syscall
+
+	; load the previous data segment end
+	pop rsi
+
 	; set the data pointer to the previous data segment
 	pop r13
 
-	; load the initial instruction pointer
-	mov r12, src
+	; fstat the open file
+	mov rax, 5
+	pop rdi
+
+	push rsi
+	push rdi
+	
+	syscall
+
+	pop r8
+	pop r14
+
+	mov rax, 9
+	xor rdi, rdi
+	mov rsi, qword [r14+48]
+	mov rdx, 1
+	mov r10, 2
+	xor r9, r9
+	syscall
+	
+	push rax
+	push rax
+
+	; close the open program file
+	mov rax, 3
+	pop rdi
+	syscall
+
+	pop r12
 
 _loop:
 
@@ -128,13 +178,10 @@ _loop.next:
 	cmp byte [r12], 0
 	jne _loop
 
-_loop.end:	
+_exit:	
 
 	; set error code 0
 	xor rdi, rdi
-	
-_exit:
-
 	mov rax, 60
 	syscall
 
@@ -263,8 +310,9 @@ _func.ret.end:
 	ret
 
 
-	
-src: db "++++++++[>++++[>++>+++>+++>+<<<<-]>+>->+>>+[<]<-]>>.>>---.+++++++..+++.>.<<-.>.+++.------.--------.>+.>++.", 0
+
+filename: db "test.b", 0
+;src: db "++++++++[>++++[>++>+++>+++>+<<<<-]>+>->+>>+[<]<-]>>.>>---.+++++++..+++.>.<<-.>.+++.------.--------.>+.>++.", 0
 
 
 filesize equ $ - $$
