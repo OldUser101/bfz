@@ -1,13 +1,23 @@
 BITS 64
 
+
+
 	org 0x400000
 
+
+
 ; ================ CONSTANTS ================
+
+
 
 TAPE_SIZE equ 30000
 STAT_SIZE equ 144
 
+
+
 ; ================ ELF HEADER ================
+
+
 
 ehdr:
 	db 0x7F, "ELF"
@@ -30,7 +40,11 @@ ehdr:
 	dw 0
 	dw 0
 
+
+
 ehdrsize equ $ - ehdr
+
+
 
 phdr:
 	dd 1
@@ -42,6 +56,8 @@ phdr:
 	dq filesize
 	dq 0x1000
 
+
+
 phdrsize equ $ - phdr
 
 
@@ -52,9 +68,14 @@ phdrsize equ $ - phdr
 
 _start:
 
+	; exit if we have don't have two arguments
+	cmp qword [rsp], 2
+	mov rdi, 1
+	jne _exit
+
 	; open the file
 	mov rax, 2
-	lea rdi, [filename]
+	mov rdi, qword [rsp+16]
 	xor rsi, rsi 	; O_RDONLY
 	xor rdx, rdx
 	syscall
@@ -94,7 +115,7 @@ _start:
 
 	push rsi
 	push rdi
-	
+
 	syscall
 
 	pop r8
@@ -107,7 +128,7 @@ _start:
 	mov r10, 2
 	xor r9, r9
 	syscall
-	
+
 	push rax
 	push rax
 
@@ -178,10 +199,13 @@ _loop.next:
 	cmp byte [r12], 0
 	jne _loop
 
-_exit:	
+_loop.exit:
 
 	; set error code 0
 	xor rdi, rdi
+
+_exit:	
+
 	mov rax, 60
 	syscall
 
@@ -312,7 +336,7 @@ _func.ret.end:
 
 
 filename: db "test.b", 0
-;src: db "++++++++[>++++[>++>+++>+++>+<<<<-]>+>->+>>+[<]<-]>>.>>---.+++++++..+++.>.<<-.>.+++.------.--------.>+.>++.", 0
+
 
 
 filesize equ $ - $$
