@@ -335,8 +335,4 @@ _func.ret.end:
 
 
 
-filename: db "test.b", 0
-
-
-
 filesize equ $ - $$
