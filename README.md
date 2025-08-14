@@ -1,6 +1,6 @@
 # BrainFuck Zero
 
-BrainFuck Zero (`bfz` for short), is a fully functional Brainfuck interpreter, written in under 500 bytes.
+BrainFuck Zero (`bfz` for short), is a fully functional Brainfuck interpreter, in under 500 bytes when assembled.
 
 It is written in pure Intel syntax x86-64 assembly.
 
